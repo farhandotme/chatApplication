@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import { Link } from "react-router-dom";
 import uploadFile from "../helpers/uploadFile";
+import axios from "axios";
 
 const RegisterPage = () => {
   const [data, setData] = useState({
@@ -41,9 +42,18 @@ const RegisterPage = () => {
     setUploadPhoto(null);
   };
 
-  const handelSubmit = (e) => {
+  const handelSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+
+    const URL = `http://localhost:8080/api/register`;
+    try {
+      const response = await axios.post(URL, data);
+      console.log("response", response);
+    } catch (error) {
+      console.log("Error", error);
+    }
+
     console.log("data", data);
   };
   return (
