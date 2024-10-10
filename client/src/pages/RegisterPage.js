@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
 import { Link } from "react-router-dom";
+import uploadFile from "../helpers/uploadFile";
 
 const RegisterPage = () => {
   const [data, setData] = useState({
@@ -21,9 +22,17 @@ const RegisterPage = () => {
     });
   };
 
-  const handelUploadPhoto = (e) => {
+  const handelUploadPhoto = async (e) => {
     const file = e.target.files[0];
+    const uploadPhoto = await uploadFile(file);
     setUploadPhoto(file);
+
+    setData((preve) => {
+      return {
+        ...preve,
+        profilePic: uploadPhoto?.url,
+      };
+    });
   };
 
   const handelClearUploadPhoto = (e) => {
@@ -39,7 +48,7 @@ const RegisterPage = () => {
   };
   return (
     <div className="mt-5">
-      <div className="bg-white w-full max-w-sm my-2 rounded overflow-hidden p-4 mx-auto">
+      <div className="bg-white w-full max-w-md my-2 rounded overflow-hidden p-4 md:mx-auto">
         <h3>Welcome to Sync Talk!</h3>
         <form className="grid gap-3 mt-5" onSubmit={handelSubmit}>
           {/* NAME */}
