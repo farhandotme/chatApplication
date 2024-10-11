@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import uploadFile from "../helpers/uploadFile";
 import axios from "axios";
+import { toast } from "react-hot-toast";
 
 const RegisterPage = () => {
   const [data, setData] = useState({
@@ -12,6 +13,7 @@ const RegisterPage = () => {
     profilePic: "",
   });
   const [uploadPhoto, setUploadPhoto] = useState();
+  const nevigate = useNavigate(); 
 
   const handelOnChange = (e) => {
     const { name, value } = e.target;
@@ -49,11 +51,21 @@ const RegisterPage = () => {
     const URL = `http://localhost:8080/api/register`;
     try {
       const response = await axios.post(URL, data);
-      console.log("response", response);
+      toast.success(response?.data?.message);
+      if (response.data.success) {
+        setData({
+          name: "",
+          email: "",
+          password: "",
+          profilePic: "",
+        });
+
+        nevigate("/email"); 
+      }
     } catch (error) {
+      toast.error(error?.response?.data?.message);
       console.log("Error", error);
     }
-
     console.log("data", data);
   };
   return (
