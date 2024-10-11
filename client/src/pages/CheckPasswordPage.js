@@ -3,14 +3,15 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import Avatar from "../components/Avatar";
-
+import { useDispatch } from "react-redux";
+import { setToken } from "../redux/userSlice";
 const CheckPasswordPage = () => {
   const [data, setData] = useState({
     password: "",
   });
   const nevigate = useNavigate();
   const location = useLocation();
-  console.log("location", location.state);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (!location?.state?.name) {
@@ -42,10 +43,12 @@ const CheckPasswordPage = () => {
           userId: location.state?._id,
           password: data.password,
         },
-        withCredentials : true,
+        withCredentials: true,
       });
       toast.success(response?.data?.message);
       if (response.data.success) {
+        dispatch(setToken(response?.data?.token));
+        localStorage.setItem("token", response?.data?.token);
         setData({
           password: "",
         });
@@ -61,7 +64,11 @@ const CheckPasswordPage = () => {
     <div className="mt-5">
       <div className="bg-white w-full max-w-md rounded overflow-hidden p-4 mx-auto">
         <div className="w-fit mx-auto mb-2 flex justify-center items-center flex-col">
-          <Avatar width={80} height={80} imageUrl={location.state?.profilePic}/>
+          <Avatar
+            width={80}
+            height={80}
+            imageUrl={location.state?.profilePic}
+          />
           <h2 className="font-semibold text-lg mt-1 ">
             Welcome, {location.state?.name}
           </h2>
