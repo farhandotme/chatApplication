@@ -13,7 +13,6 @@ const EditUserDetails = ({ onClose, user }) => {
     name: user?.user,
     profilePic: user?.profilePic,
   });
-
   const uploadPhotoRef = useRef();
   const dispatch = useDispatch();
 
@@ -21,7 +20,9 @@ const EditUserDetails = ({ onClose, user }) => {
     setData((preve) => {
       return {
         ...preve,
-        user,
+        _id: user._id,
+        name: user.name,        // Update these fields
+        profilePic: user.profilePic,
       };
     });
   }, [user]);
@@ -89,6 +90,7 @@ const EditUserDetails = ({ onClose, user }) => {
               type="text"
               name="name"
               id="name"
+              placeholder="Enter the Name you want to Update"
               value={data.name}
               onChange={handelOnchange}
               className="w-full py-1 px-2 border-2 border-slate-300 rounded"

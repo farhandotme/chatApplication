@@ -1,15 +1,19 @@
 async function logout(req, res) {
   try {
     const cookieOptions = {
-      httpOnly: true,
+      http: true,
       secure: true,
+      sameSite: "None",
     };
-    return res
-      .cookie("token", "", cookieOptions)
-      .status(200)
-      .json({ message: "Logout Successfully", success: true });
+    return res.cookie("token", "", cookieOptions).status(200).json({
+      message: "session out",
+      success: true,
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message, error: true });
+    return res.status(500).json({
+      message: error.message || error,
+      error: true,
+    });
   }
 }
 
