@@ -1,10 +1,33 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IoSearchOutline } from "react-icons/io5";
 import Loading from "./Loading";
+import UserSearchCard from "./UserSearchCard";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const SearchUser = () => {
   const [SearchUser, setSearchUser] = useState([]);
-  const [loading, setloading] = useState(true);
+  const [loading, setloading] = useState(false);
+  const [search, setSearch] = useState("");
+  const handelSearchUser = async (e) => {
+    const URL = `http://localhost:8080/api/searchUser`;
+    try {
+      setloading(true);
+      const response = await axios.post(URL, {
+        search: search,
+      });
+      setloading(false);
+      setSearchUser(response.data.data);
+    } catch (error) {
+      toast.error(error?.response?.data?.message);
+    }
+  };
+
+  useEffect(() => {
+    handelSearchUser();
+  }, [search]);
+
+  console.log("SearchUser", SearchUser);
 
   return (
     <div className="fixed top-0 bottom-0 left-0 right-0 bg-slate-500 bg-opacity-30 p-2">
@@ -15,6 +38,8 @@ const SearchUser = () => {
             type="text"
             placeholder="Search Users"
             className="w-full outline-none py-1 h-full px-4 rounded "
+            onChange={(e) => setSearch(e.target.value)}
+            value={search}
           />
           <div className="h-14 w-14 flex justify-center items-center">
             <IoSearchOutline size={28} />
@@ -35,6 +60,12 @@ const SearchUser = () => {
               <Loading size={25} />
             </p>
           )}
+
+          {SearchUser.length !== 0 &&
+            !loading &&
+            SearchUser.map((user, index) => (
+              <UserSearchCard key={user._id} user={user} />
+            ))}
         </div>
       </div>
     </div>
