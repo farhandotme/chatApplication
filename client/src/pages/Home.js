@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, setUser } from "../redux/userSlice";
+import SideBar from "../components/SideBar";
 
 const Home = () => {
   const user = useSelector((state) => state.user);
@@ -33,8 +34,10 @@ const Home = () => {
     fetchUserDetails();
   }, []);
   return (
-    <div>
-      <h1>Home page</h1>
+    <div className="grid lg:grid-cols-[300px_1fr] h-screen max-h-screen">
+      <section className="bg-white">
+        <SideBar />
+      </section>
       <section>
         <Outlet />
       </section>
