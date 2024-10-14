@@ -14,7 +14,7 @@ const SideBar = () => {
 
   const [allUser, setAllUser] = useState([]);
 
-  const [openSearchUser, setOpenSearchUser] = useState(true);
+  const [openSearchUser, setOpenSearchUser] = useState(false);
   return (
     <div className="w-full h-full grid grid-cols-[48px,1fr] bg-white">
       <div className="bg-slade-100 w-12 h-full rounded-tr-lg rounded-br-lg py-5 text-slate-700 flex flex-col justify-between">
@@ -48,6 +48,7 @@ const SideBar = () => {
               height={40}
               name={user?.name}
               imageUrl={user?.profilePic}
+              userId={user?._id}
             />
           </button>
 

@@ -4,8 +4,10 @@ import Loading from "./Loading";
 import UserSearchCard from "./UserSearchCard";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { MdOutlineClose } from "react-icons/md";
 
-const SearchUser = () => {
+
+const SearchUser = ({onClose}) => {
   const [SearchUser, setSearchUser] = useState([]);
   const [loading, setloading] = useState(false);
   const [search, setSearch] = useState("");
@@ -32,7 +34,7 @@ const SearchUser = () => {
   return (
     <div className="fixed top-0 bottom-0 left-0 right-0 bg-slate-500 bg-opacity-30 p-2">
       <div className="w-full max-w-lg mx-auto mt-10 ">
-        {/* Inmpt Search */}
+        {/* Input Search */}
         <div className="bg-white rounded h-14 overflow-hidden flex">
           <input
             type="text"
@@ -64,9 +66,16 @@ const SearchUser = () => {
           {SearchUser.length !== 0 &&
             !loading &&
             SearchUser.map((user, index) => (
-              <UserSearchCard key={user._id} user={user} />
+              <UserSearchCard key={user._id} user={user} onClose={onClose}/>
             ))}
         </div>
+      </div>
+      <div>
+        <MdOutlineClose
+          size={25}
+          className="absolute top-2 right-2 cursor-pointer"
+          onClick={onClose}
+        />
       </div>
     </div>
   );

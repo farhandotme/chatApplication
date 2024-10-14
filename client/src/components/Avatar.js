@@ -1,9 +1,14 @@
 import React from "react";
-import { CiUser } from "react-icons/ci";
+import { PiUserCircleLight } from "react-icons/pi";
+import { useSelector } from "react-redux";
 
 const Avatar = ({ userId, name, imageUrl, width = 100, height = 100 }) => {
+  const onlineUser = useSelector((state) => state?.user?.onlineUsers);
+
+  const isOnline = onlineUser.includes(userId);
+
   return (
-    <div className="w-fit mx-auto mb-2 flex justify-center items-center flex-col">
+    <div className="w-fit mx-auto mb-2 flex justify-center items-center flex-col relative">
       {imageUrl ? (
         <img
           src={imageUrl}
@@ -14,7 +19,11 @@ const Avatar = ({ userId, name, imageUrl, width = 100, height = 100 }) => {
           style={{ width: `${width}px`, height: `${height}px` }}
         />
       ) : (
-        <CiUser size={width} />
+        <PiUserCircleLight size={width} />
+      )}
+
+      {isOnline && (
+        <div className="bg-green-700 w-3 h-3 rounded-full absolute bottom-0 right-0 "></div>
       )}
     </div>
   );

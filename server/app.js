@@ -1,11 +1,12 @@
 const express = require("express");
 const cors = require("cors");
 const conn = require("./db/connectionDb");
-const app = express();
+// const app = express();
 const router = require("./routes/userRouter");
 const cookieParser = require("cookie-parser");
 const dotenv = require("dotenv");
-dotenv.config({path: "./.env"});
+dotenv.config({ path: "./.env" });
+const { app, server } = require("./socket/index");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -24,5 +25,5 @@ app.use("/api", router);
 const port = process.env.PORT || 8080;
 
 conn().then(() => {
-  app.listen(port, () => console.log(`Server running on port ${port}`));
+  server.listen(port, () => console.log(`Server running on port ${port}`));
 });
