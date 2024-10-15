@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import Avatar from "./Avatar";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { MdOutlineArrowBackIos } from "react-icons/md";
+import backgroundImage from "../assets/wallapaper.jpeg";
 
 const MessagePage = () => {
   const params = useParams();
@@ -20,6 +21,11 @@ const MessagePage = () => {
     online: false,
   });
 
+  const [message, setMessage] = useState({
+    text : "",
+
+  });
+
   useEffect(() => {
     if (socketConnection) {
       socketConnection.emit("messagePage", params.userId);
@@ -31,7 +37,7 @@ const MessagePage = () => {
   }, [socketConnection, params?.userId, user]);
 
   return (
-    <div>
+    <div style={{backgroundImage : `url(${backgroundImage})`}} className="bg-no-repeat bg-cover">
       {/* Header section */}
 
       <header className="sticky top-0 h-16 bg-white flex items-center justify-between px-4 shadow-md">
@@ -70,7 +76,14 @@ const MessagePage = () => {
       {/* Show all message Here */}
 
       <section className="h-[calc(100vh-128px)] overflow-x-hidden overflow-y-scroll">
-        Show All Messages
+        {
+          message.text ? (
+            <div className="w-full h-full "></div>
+          ) : null
+        }
+        <div className="w-full h-full ">
+
+        </div>
       </section>
 
       {/* Send Message */}
