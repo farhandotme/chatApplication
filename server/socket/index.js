@@ -40,10 +40,10 @@ io.on("connection", async (socket) => {
   socket.on("messagePage", async (userId) => {
     const userDetails = await userModel.findById(userId).select("-password");
     const payload = {
-      _id: userDetails._id,
-      name: userDetails.name,
-      email: userDetails.email,
-      // profilePic: userDetails.profilePic,
+      _id: userDetails?._id,
+      name: userDetails?.name,
+      email: userDetails?.email,
+      profilePic: userDetails?.profilePic,
       online: onlineUser.has(userId),
     };
 
