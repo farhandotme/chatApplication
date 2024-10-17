@@ -34,6 +34,12 @@ io.on("connection", async (socket) => {
   // Current user details
   const user = await getUserDetailsFromToken(token);
 
+  if (!user) {
+    console.error("User not found for the provided token.");
+    socket.disconnect(); 
+    return;
+  }
+
   // Create a Room
 
   socket.join(user?._id.toString());
@@ -52,56 +58,71 @@ io.on("connection", async (socket) => {
     };
 
     socket.emit("messageUser", payload);
+
+    // Previous Messages
+    const getConversationMessage = await conversationModel
+        .findOne({
+            $or: [
+                { sender: user._id, receiver: userId },
+                { sender: userId, receiver: user._id },
+            ],
+        })
+        .populate("messages")
+        .sort({ updatedAt: -1 });
+
+        socket.emit("message", getConversationMessage?.messages);
+    
   });
+
 
   // New message
 
   socket.on("new message", async (data) => {
-    // check conversation is available or not
-    const conversation = await conversationModel.findOne({
-      $or: [
-        { sender: data?.sender, receiver: data?.receiver },
-        { sender: data?.receiver, receiver: data?.sender },
-      ],
+    // Check if conversation is available or not
+    let conversation = await conversationModel.findOne({
+        $or: [
+            { sender: data?.sender, receiver: data?.receiver },
+            { sender: data?.receiver, receiver: data?.sender },
+        ],
     });
-
+  
     if (!conversation) {
-      const createConversation = await conversationModel.create({
-        sender: data?.sender,
-        receiver: data?.receiver,
-      });
-      conversation = await createConversation;
+        // Create new conversation
+        conversation = await conversationModel.create({
+            sender: data?.sender,
+            receiver: data?.receiver,
+        });
     }
-
+  
     const message = await messageModel.create({
-      text: data.text,
-      messaageBy: data?.messaageBy,
+        text: data.text,
+        messageBy: data?.messageBy,
     });
     const saveMessage = await message.save();
-
-    const updateConversation = await conversationModel.findByIdAndUpdate(
-      conversation._id,
-      {
-        $push: {
-          messages: saveMessage._id,
+  
+    await conversationModel.findByIdAndUpdate(
+        conversation._id,
+        {
+            $push: {
+                messages: saveMessage._id,
+            },
         },
-      },
-      { new: true }
+        { new: true }
     );
-
+  
     const getConversationMessage = await conversationModel
-      .findOne({
-        $or: [
-          { sender: data?.sender, receiver: data?.receiver },
-          { sender: data?.receiver, receiver: data?.sender },
-        ],
-      })
-      .populate("messages")
-      .sort({ updatedAt: -1 });
-
+        .findOne({
+            $or: [
+                { sender: data?.sender, receiver: data?.receiver },
+                { sender: data?.receiver, receiver: data?.sender },
+            ],
+        })
+        .populate("messages")
+        .sort({ updatedAt: -1 });
+  
     io.to(data?.sender).emit("message", getConversationMessage.messages);
     io.to(data?.receiver).emit("message", getConversationMessage.messages);
-
+  
     // io.emit("new message", data);
   });
 
