@@ -10,6 +10,10 @@ const messageSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    messageBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true }
 );
@@ -36,6 +40,10 @@ const conversationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Message", messageSchema);
+const conversationModel = mongoose.model("Conversation", conversationSchema);
+const messageModel = mongoose.model("Message", messageSchema);
 
-module.exports = mongoose.model("Conversation", conversationSchema);
+module.exports = {
+  conversationModel,
+  messageModel,
+};

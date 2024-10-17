@@ -5,6 +5,7 @@ import Avatar from "./Avatar";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { MdOutlineArrowBackIos } from "react-icons/md";
 import backgroundImage from "../assets/wallapaper.jpeg";
+import { IoSend } from "react-icons/io5";
 
 const MessagePage = () => {
   const params = useParams();
@@ -22,8 +23,7 @@ const MessagePage = () => {
   });
 
   const [message, setMessage] = useState({
-    text : "",
-
+    text: "",
   });
 
   useEffect(() => {
@@ -33,11 +33,46 @@ const MessagePage = () => {
       socketConnection.on("messageUser", (data) => {
         setDataUser(data);
       });
+
+      socketConnection.on("message", (data)=>{
+        console.log("message", data);
+        
+      })
     }
   }, [socketConnection, params?.userId, user]);
 
+  const handleOnChange = (e) => {
+    const { name, value } = e.target;
+    setMessage((preve) => {
+      return {
+        ...preve,
+        text: value,
+      };
+    });
+  };
+
+  const handelSendMessage = async (e) => {
+    e.preventDefault();
+    if (message.text) {
+      if (socketConnection) {
+        socketConnection.emit("new message", {
+          sender: user?._id,
+          receiver: params.userId,
+          text: message.text,
+          messageBy: user?._id,
+        });
+        setMessage({
+          text: "",
+        });
+      }
+    }
+  };
+
   return (
-    <div style={{backgroundImage : `url(${backgroundImage})`}} className="bg-no-repeat bg-cover">
+    <div
+      style={{ backgroundImage: `url(${backgroundImage})` }}
+      className="bg-no-repeat bg-cover"
+    >
       {/* Header section */}
 
       <header className="sticky top-0 h-16 bg-white flex items-center justify-between px-4 shadow-md">
@@ -75,21 +110,30 @@ const MessagePage = () => {
 
       {/* Show all message Here */}
 
-      <section className="h-[calc(100vh-128px)] overflow-x-hidden overflow-y-scroll">
-        {
-          message.text ? (
-            <div className="w-full h-full "></div>
-          ) : null
-        }
-        <div className="w-full h-full ">
-
-        </div>
+      <section className="h-[calc(100vh-128px)] overflow-x-hidden overflow-y-scroll bg-slate-50 opacity-50">
+        {message.text ? <div className="w-full h-full "></div> : null}
+        <div className="w-full h-full "></div>
       </section>
 
       {/* Send Message */}
 
       <section className="h-16 bg-white flex items-center p-4">
-        Send Message
+        <form
+          className="h-full w-full flex items-center gap-5"
+          onSubmit={handelSendMessage}
+        >
+          <input
+            type="text"
+            placeholder="Send Message"
+            className="py-1 px-4 outline-none w-full h-10 text-xl bg-slade-500 border border-slate-300 rounded-full"
+            value={message.text}
+            onChange={handleOnChange}
+          />
+
+          <button type="submit">
+            <IoSend size={25} className="cursor-pointer" />
+          </button>
+        </form>
       </section>
     </div>
   );
