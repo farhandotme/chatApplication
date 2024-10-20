@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IoMdChatbubbles } from "react-icons/io";
 import { TiUserAdd } from "react-icons/ti";
 import { TbLogout2 } from "react-icons/tb";
@@ -11,10 +11,42 @@ import SearchUser from "./SearchUser";
 const SideBar = () => {
   const user = useSelector((state) => state?.user);
   const [editUserOpen, setEditUserOpen] = useState(false);
-
   const [allUser, setAllUser] = useState([]);
-
   const [openSearchUser, setOpenSearchUser] = useState(false);
+
+  const socketConnection = useSelector(
+    (state) => state?.user?.socketConnection
+  );
+
+  useEffect(() => {
+    if (socketConnection) {
+      socketConnection.emit("sidebar", user._id);
+      socketConnection.on("conversation", (data) => {
+        console.log("conversation", data);
+        const conversationUserData = data.map((conversationUser, index) => {
+          if (
+            conversationUser?.sender?._id === conversationUser?.receiver?._id
+          ) {
+            return {
+              ...conversationUser,
+              userDetails: conversationUser?.sender,
+            };
+          } else if (conversationUser?.receiver?._id !== user?._id) {
+            return {
+              ...conversationUser,
+              userDetails: conversationUser.receiver,
+            };
+          } else {
+            return {
+              ...conversationUser,
+              userDetails: conversationUser.sender,
+            };
+          }
+        });
+        setAllUser(conversationUserData);
+      });
+    }
+  }, [socketConnection, user]);
   return (
     <div className="w-full h-full grid grid-cols-[48px,1fr] bg-white">
       <div className="bg-slade-100 w-12 h-full rounded-tr-lg rounded-br-lg py-5 text-slate-700 flex flex-col justify-between">
@@ -32,7 +64,7 @@ const SideBar = () => {
           <div
             className="w-12 h-12 flex justify-center items-center cursor-pointer hover:bg-slate-200 rounded"
             title="Add Friend"
-            onClick={()=>setOpenSearchUser(true)}
+            onClick={() => setOpenSearchUser(true)}
           >
             <TiUserAdd size={25} />
           </div>
@@ -73,9 +105,39 @@ const SideBar = () => {
         <div className=" h-[calc(100vh-65px)] overflow-x-hidden overflow-y-auto">
           {allUser.length === 0 && (
             <div className="mt-20">
-              <p className="text-lg text-center text-slate-700">Explore users to start New Conversation</p>
+              <p className="text-lg text-center text-slate-700">
+                Explore users to start New Conversation
+              </p>
             </div>
           )}
+
+          {allUser.map((conv, index) => {
+            console.log("User Details:", conv?.userDetails);
+            return (
+              <div
+                className="flex items-center gap-3 p-4 hover:bg-slate-200 cursor-pointer"
+                key={conv?._id}
+              >
+                <div>
+                  <Avatar
+                    imageUrl={conv?.userDetails?.profilePic}
+                    name={conv?.userDetails?.name}
+                    width={40}
+                    height={40}
+                  />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold ml-auto">
+                    {conv?.userDetails?.name}
+                    <div>
+                      <p>{conv?.lastMsg.text}</p>
+                    </div>
+                    <p>{conv?.unSeenMsg}</p>
+                  </h1>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -87,15 +149,9 @@ const SideBar = () => {
 
       {/* Search user */}
 
-      {
-        openSearchUser && (
-          <SearchUser 
-            onClose = {()=>setOpenSearchUser(false)}
-          />
-        )
-      }
-
-
+      {openSearchUser && (
+        <SearchUser onClose={() => setOpenSearchUser(false)} />
+      )}
     </div>
   );
 };

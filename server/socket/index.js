@@ -36,7 +36,7 @@ io.on("connection", async (socket) => {
 
   if (!user) {
     console.error("User not found for the provided token.");
-    socket.disconnect(); 
+    socket.disconnect();
     return;
   }
 
@@ -61,69 +61,104 @@ io.on("connection", async (socket) => {
 
     // Previous Messages
     const getConversationMessage = await conversationModel
-        .findOne({
-            $or: [
-                { sender: user._id, receiver: userId },
-                { sender: userId, receiver: user._id },
-            ],
-        })
-        .populate("messages")
-        .sort({ updatedAt: -1 });
+      .findOne({
+        $or: [
+          { sender: user._id, receiver: userId },
+          { sender: userId, receiver: user._id },
+        ],
+      })
+      .populate("messages")
+      .sort({ updatedAt: -1 });
 
-        socket.emit("message", getConversationMessage?.messages);
-    
+    socket.emit("message", getConversationMessage?.messages || []);
   });
-
 
   // New message
 
   socket.on("new message", async (data) => {
     // Check if conversation is available or not
     let conversation = await conversationModel.findOne({
-        $or: [
-            { sender: data?.sender, receiver: data?.receiver },
-            { sender: data?.receiver, receiver: data?.sender },
-        ],
+      $or: [
+        { sender: data?.sender, receiver: data?.receiver },
+        { sender: data?.receiver, receiver: data?.sender },
+      ],
     });
-  
+
     if (!conversation) {
-        // Create new conversation
-        conversation = await conversationModel.create({
-            sender: data?.sender,
-            receiver: data?.receiver,
-        });
+      // Create new conversation
+      conversation = await conversationModel.create({
+        sender: data?.sender,
+        receiver: data?.receiver,
+      });
     }
-  
+
     const message = await messageModel.create({
-        text: data.text,
-        messageBy: data?.messageBy,
+      text: data.text,
+      messageBy: data?.messageBy,
     });
     const saveMessage = await message.save();
-  
+
     await conversationModel.findByIdAndUpdate(
-        conversation._id,
-        {
-            $push: {
-                messages: saveMessage._id,
-            },
+      conversation._id,
+      {
+        $push: {
+          messages: saveMessage._id,
         },
-        { new: true }
+      },
+      { new: true }
     );
-  
+
     const getConversationMessage = await conversationModel
-        .findOne({
-            $or: [
-                { sender: data?.sender, receiver: data?.receiver },
-                { sender: data?.receiver, receiver: data?.sender },
-            ],
-        })
-        .populate("messages")
-        .sort({ updatedAt: -1 });
-  
-    io.to(data?.sender).emit("message", getConversationMessage.messages);
-    io.to(data?.receiver).emit("message", getConversationMessage.messages);
-  
+      .findOne({
+        $or: [
+          { sender: data?.sender, receiver: data?.receiver },
+          { sender: data?.receiver, receiver: data?.sender },
+        ],
+      })
+      .populate("messages")
+      .sort({ updatedAt: -1 });
+
+    io.to(data?.sender).emit("message", getConversationMessage?.messages || []);
+    io.to(data?.receiver).emit("message", getConversationMessage?.messages || []);
+
     // io.emit("new message", data);
+  });
+
+  // SideBar
+
+  socket.on("sidebar", async (currentUserId) => {
+    console.log("current user", currentUserId);
+
+    // Ensure that currentUserId is a valid ObjectId
+    if (!currentUserId || currentUserId === "") {
+      console.error("Invalid currentUserId:", currentUserId);
+      return;
+    }
+
+    const currentUserConversation = await conversationModel
+      .find({
+        $or: [{ sender: currentUserId }, { receiver: currentUserId }],
+      })
+      .sort({ updatedAt: -1 })
+      .populate("messages")
+      .populate("sender")
+      .populate("receiver");
+
+    const conversation = currentUserConversation.map((conv) => {
+      const countUnSeenMsg = conv?.messages?.reduce(
+        (prev, curr) => prev + (curr.seen ? 0 : 1),
+        0
+      );
+      return {
+        _id: conv?._id,
+        sender: conv?.sender,
+        receiver: conv?.receiver,
+        unSeenMsg: countUnSeenMsg,
+        lastMsg: conv?.messages[conv?.messages?.length - 1],
+      };
+    });
+
+    socket.emit("conversation", conversation);
   });
 
   // Disconnect
