@@ -1,5 +1,5 @@
 const express = require("express");
-
+const getconversation = require("../middlewares/getConversation");
 const { Server } = require("socket.io");
 const http = require("http");
 const getUserDetailsFromToken = require("../middlewares/userDetailsFromToken");
@@ -119,7 +119,18 @@ io.on("connection", async (socket) => {
       .sort({ updatedAt: -1 });
 
     io.to(data?.sender).emit("message", getConversationMessage?.messages || []);
-    io.to(data?.receiver).emit("message", getConversationMessage?.messages || []);
+    io.to(data?.receiver).emit(
+      "message",
+      getConversationMessage?.messages || []
+    );
+
+    // send conversation
+
+    const conversationSender = await getconversation(data.sender);
+    const conversationReceiver = await getconversation(data.receiver);
+
+    io.to(data?.sender).emit("conversation", conversationSender);
+    io.to(data?.receiver).emit("conversation", conversationReceiver);
 
     // io.emit("new message", data);
   });
@@ -130,35 +141,12 @@ io.on("connection", async (socket) => {
     console.log("current user", currentUserId);
 
     // Ensure that currentUserId is a valid ObjectId
-    if (!currentUserId || currentUserId === "") {
-      console.error("Invalid currentUserId:", currentUserId);
-      return;
-    }
-
-    const currentUserConversation = await conversationModel
-      .find({
-        $or: [{ sender: currentUserId }, { receiver: currentUserId }],
-      })
-      .sort({ updatedAt: -1 })
-      .populate("messages")
-      .populate("sender")
-      .populate("receiver");
-
-    const conversation = currentUserConversation.map((conv) => {
-      const countUnSeenMsg = conv?.messages?.reduce(
-        (prev, curr) => prev + (curr.seen ? 0 : 1),
-        0
-      );
-      return {
-        _id: conv?._id,
-        sender: conv?.sender,
-        receiver: conv?.receiver,
-        unSeenMsg: countUnSeenMsg,
-        lastMsg: conv?.messages[conv?.messages?.length - 1],
-      };
-    });
-
+    const conversation = await getconversation(currentUserId);
     socket.emit("conversation", conversation);
+  });
+
+  socket.on("seen", (data) => {
+    
   });
 
   // Disconnect

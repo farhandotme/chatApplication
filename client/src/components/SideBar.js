@@ -114,10 +114,12 @@ const SideBar = () => {
           {allUser.map((conv, index) => {
             console.log("User Details:", conv?.userDetails);
             return (
-              <div
+              <NavLink
+              to={`/${conv.userDetails?._id}`}
                 className="flex items-center gap-3 p-4 hover:bg-slate-200 cursor-pointer"
                 key={conv?._id}
               >
+                {/* Avatar */}
                 <div>
                   <Avatar
                     imageUrl={conv?.userDetails?.profilePic}
@@ -126,16 +128,28 @@ const SideBar = () => {
                     height={40}
                   />
                 </div>
-                <div>
-                  <h1 className="text-lg font-bold ml-auto">
+
+                {/* User Details */}
+                <div className="flex-1 overflow-hidden">
+                  <h1 className="text-lg font-bold">
                     {conv?.userDetails?.name}
-                    <div>
-                      <p>{conv?.lastMsg.text}</p>
-                    </div>
-                    <p>{conv?.unSeenMsg}</p>
                   </h1>
+
+                  {/* Last Message (Truncated) */}
+                  <p className="text-sm text-gray-600 truncate max-w-[180px]">
+                    {conv?.lastMsg?.text}
+                  </p>
                 </div>
-              </div>
+
+                {/* Unseen Messages */}
+                {conv?.unSeenMsg > 0 && (
+                  <div className="ml-2 flex items-center justify-center">
+                    <p className="text-white bg-black rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                      {conv?.unSeenMsg}
+                    </p>
+                  </div>
+                )}
+              </NavLink>
             );
           })}
         </div>
