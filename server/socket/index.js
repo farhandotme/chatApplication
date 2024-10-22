@@ -31,6 +31,12 @@ io.on("connection", async (socket) => {
   console.log("User Connected", socket.id);
   const token = socket.handshake.auth.token;
 
+  if (!token) {
+    console.error("Token not provided.");
+    socket.disconnect();
+    return;
+  }
+
   // Current user details
   const user = await getUserDetailsFromToken(token);
 
@@ -42,8 +48,10 @@ io.on("connection", async (socket) => {
 
   // Create a Room
 
-  socket.join(user?._id.toString());
-  onlineUser.add(user?._id?.toString());
+  const userss = user._id.toString();
+  socket.join(userss);
+  onlineUser.add(userss);
+  io.emit("onlineUser", Array.from(onlineUser));
 
   io.emit("onlineUser", Array.from(onlineUser));
 
@@ -145,13 +153,31 @@ io.on("connection", async (socket) => {
     socket.emit("conversation", conversation);
   });
 
-  socket.on("seen", (data) => {
-    
+  socket.on("seen", async (msgByUserId) => {
+    let conversation = await conversationModel.findOne({
+      $or: [
+        { sender: user?._id, receiver: msgByUserId },
+        { sender: msgByUserId, receiver: user?._id },
+      ],
+    });
+
+    const conversationMessages = conversation?.messages || [];
+
+    const updateMessages = await messageModel.updateMany(
+      { _id: { $in: conversationMessages }, messageBy: msgByUserId },
+      { $set: { seen: true } }
+    );
+
+    const conversationSender = await getconversation(user?._id.toString());
+    const conversationReceiver = await getconversation(msgByUserId);
+
+    io.to(user?._id.toString()).emit("conversation", conversationSender);
+    io.to(msgByUserId).emit("conversation", conversationReceiver);
   });
 
   // Disconnect
   socket.on("disconnect", () => {
-    onlineUser.delete(user?._id);
+    onlineUser.delete(user?._id.toString());
     console.log("User Disconnected", socket.id);
   });
 });

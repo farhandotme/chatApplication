@@ -2,17 +2,20 @@ import React, { useEffect, useState } from "react";
 import { IoMdChatbubbles } from "react-icons/io";
 import { TiUserAdd } from "react-icons/ti";
 import { TbLogout2 } from "react-icons/tb";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import Avatar from "../components/Avatar";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import EditUserDetails from "./EditUserDetails";
 import SearchUser from "./SearchUser";
+import { logout } from "../redux/userSlice";
 
 const SideBar = () => {
   const user = useSelector((state) => state?.user);
   const [editUserOpen, setEditUserOpen] = useState(false);
   const [allUser, setAllUser] = useState([]);
   const [openSearchUser, setOpenSearchUser] = useState(false);
+  const dispatch = useDispatch();
+  const navgate = useNavigate();
 
   const socketConnection = useSelector(
     (state) => state?.user?.socketConnection
@@ -47,6 +50,12 @@ const SideBar = () => {
       });
     }
   }, [socketConnection, user]);
+
+  const handelLogout = () => {
+    dispatch(logout());
+    navgate("/email");
+    localStorage.clear();
+  };
   return (
     <div className="w-full h-full grid grid-cols-[48px,1fr] bg-white">
       <div className="bg-slade-100 w-12 h-full rounded-tr-lg rounded-br-lg py-5 text-slate-700 flex flex-col justify-between">
@@ -87,6 +96,7 @@ const SideBar = () => {
           <button
             className="w-12 h-12 flex justify-center items-center cursor-pointer hover:bg-slate-200 rounded"
             title="Logout"
+            onClick={handelLogout}
           >
             <span className="-ml-1">
               <TbLogout2 size={25} />
@@ -115,7 +125,7 @@ const SideBar = () => {
             console.log("User Details:", conv?.userDetails);
             return (
               <NavLink
-              to={`/${conv.userDetails?._id}`}
+                to={`/${conv.userDetails?._id}`}
                 className="flex items-center gap-3 p-4 hover:bg-slate-200 cursor-pointer"
                 key={conv?._id}
               >
